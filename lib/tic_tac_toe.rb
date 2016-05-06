@@ -1,4 +1,4 @@
-#require 'pry'
+require 'pry'
 module TicTacToe
   class Cell
     attr_accessor :val
@@ -9,22 +9,28 @@ module TicTacToe
   end
 
   class Player
-    attr_reader :name, :char
+    attr_reader  :char
+    attr_accessor :name
 
-    def initialize(name, char)
+    def initialize(name = "human", char = 'x')
+     
       @name = name
       @char = char
     end
+
  
 
-end
+  end
 
   class GameBoard
 
-  attr_reader :grid
+  attr_reader :grid, :length 
+  attr_accessor :available_spaces
 
     def initialize
-      @grid =  default
+      reset_board
+      @length = @grid.length
+    
     end
 
     def get_cell_coordinates(x,y)
@@ -35,17 +41,15 @@ end
       get_cell_coordinates(x,y).val = char
     end
 
-    def available_spaces
-        @grid.select do |row|
-    end
+
 
     def winner?
-      #binding.pry
-      diagonal_wins? || row_wins? || column_wins?
+     # binding.pry
+      diagonal_wins? || anti_diagonal_wins? || row_wins? || column_wins?
     end
 
      def tie?
-      !(@grid.flatten.find{|cell| cell.val == " "})
+      @available_spaces.empty?
     end
 
 
@@ -55,101 +59,104 @@ end
 
     def reset_board
       @grid = default
+      @available_spaces = [1,2,3,4,5,6,7,8,9]
     end
     
  
     def default
       Array.new(3){ Array.new(3) { Cell.new}}
-      # n = 1
-      # row_size = 0
-      # column_size = 0
-      # grid = []
-      # while row_size < 3
-      #   arr = []
-      #   while column_size < 3
-      #     arr << Cell.new(n)
-      #     n+=1
-      #     column_size +=1
-      #   end
-      #   grid << arr
-      # row_size += 1
-      # end
-      # grid
     end
+
          
    
     def diagonal_wins?
-
-      diagonals = []
-      right_diag = [@grid[0][0].val, @grid[1][1].val, @grid[2][2].val]
-   
-      left_diag = [@grid[0][2].val, @grid[1][1].val, @grid[2][0].val]
-      diagonals << right_diag
-      diagonals << left_diag
-      diags_new = diagonals.map{|diag| diag.reject{|item| item == ' '}.compact}
-  
-      diag_wins = diags_new.find{|diag| diag.size == 3 && diag.uniq.size == 1}
-      diag_wins ? true : false
+      #binding.pry
+      i = 0
+      chars = []
+      while i < @length
+        chars << @grid[i][i].val
+        i+=1
+      end
+      diag_chars = chars.reject{|item| item == ' '}
+      diag_chars.size == 3 && diag_chars.uniq.size == 1
     end
 
+    def anti_diagonal_wins?
+      i = 0
+      chars = []
+      while i < @length
+        chars << @grid[i][(@length-1)-i].val
+        i+=1
+      end
+      anti_diag_chars = chars.reject{|item| item == ' '}
+      anti_diag_chars.size == 3 && anti_diag_chars.uniq.size == 1  
+    end
+  
+
     def row_wins?
-
-      rows = []
-      x = 0
-      while x < 3
-        rows << [@grid[x][0].val, @grid[x][1].val, @grid[x][2].val]
-        x+=1
+      i = 0
+      y = 0
+      while i < @length
+        while y < @length
+          break if (@grid[i][y].val == " " ||   (@grid[i][y].val != @grid[i][y+1].val))
+          y+=1
+          return true if (y == @length - 1)
+        end
+        i+=1
       end
-      rows_unique = rows.map do |row|
-      row.reject{|item| item == ' '}
-      end
+      false
+    end
+    
       
-      row_wins = rows_unique.find{|row| row.size == 3 && row.uniq.size == 1}
 
-      row_wins ? true : false
-      end
 
 
     def column_wins?
-      columns = []
       y = 0
-      while y < 3
-        columns << [@grid[0][y].val, @grid[1][y].val, @grid[2][y].val]
-        y += 1
+      i = 0
+      while y < @length
+        while i < @length
+         break if (@grid[i][y].val == " " ||  @grid[i][y].val != @grid[i +1][y].val)
+          i+=1
+          return true if(i == @length - 1)
+        end
+         y+=1
       end
-      columns_unique = columns.map do |column|
-        column.reject{|item| item == ' '}.compact
-      end
-      column_wins = columns_unique.find{|row| row.size == 3 && row.uniq.size == 1}
-
-      column_wins ? true : false
+      false
     end
-
   end
 
   class Game
-    attr_accessor :players, :board, :current_player, :next_player
+    attr_accessor :player,:computer, :players, :board, :current_player, :next_player
 
     def initialize(players, board = GameBoard.new)
-      @players = players
+      @computer = Player.new("Computer", "o")
+      @player = Player.new
+      @players = [@player, @computer]
       @board = board
-      @current_player, @next_player = players.shuffle
+      @current_player = @players.sample
     end
 
     def next_player
-      @current_player, @next_player = @next_player, @current_player
+      #binding.pry
+      @current_player == @player ? @computer : @player
     end
 
     def ask_current_player_move
       puts "#{@current_player.name}, choose a number from the grid to make your turn"
     end
 
+    def computer_move
+      @board.available_spaces.sample
+    end
+
+
     def get_current_players_move
       move = gets.chomp.to_i
     end
 
     def convert_move
-      the_move = get_current_players_move
+      @current_player == @player ? the_move = get_current_players_move : the_move = computer_move
       moves =  {
       1 => [0,0],
       2 => [0,1],
@@ -161,21 +168,27 @@ end
       8 => [2,1],
       9 => [2,2]
       }
-      moves[the_move]
+      if @board.available_spaces.include?(the_move)
+         @board.available_spaces -= [the_move]
+         moves[the_move]
+      else
+        puts"please choose an available space"
+        convert_move
+      end
     end
+    
 
     def game_over
-      
-       puts "#{@current_player.name} won" if @board.winner?
-        puts "Its a tie!" if @board.tie?
+      puts "#{@current_player.name} won" if (@board.winner? && @board.tie?) || @board.winner?
+      puts "Its a tie!" if @board.tie?
     end
 
     def show_board                    
-    puts " #{@board.grid[0][0].val} | #{@board.grid[0][1].val} | #{@board.grid[0][2].val}"
-    puts "-----------"
-    puts " #{@board.grid[1][0].val} | #{@board.grid[1][1].val} | #{@board.grid[1][2].val}"
-    puts "-----------"
-    puts " #{@board.grid[2][0].val} | #{@board.grid[2][1].val} | #{@board.grid[2][2].val}"
+    puts "1   #{@board.grid[0][0].val} |2   #{@board.grid[0][1].val} |3   #{@board.grid[0][2].val}"
+    puts "--------------------"
+    puts "4   #{@board.grid[1][0].val} |5   #{@board.grid[1][1].val} |6   #{@board.grid[1][2].val}"
+    puts "--------------------"
+    puts "7   #{@board.grid[2][0].val} |8   #{@board.grid[2][1].val} |9   #{@board.grid[2][2].val}"
     end
 
     def play_again
@@ -188,22 +201,33 @@ end
       if input == 'y'
         true
       elsif input == 'n'
-        return
+        false
       else
         puts "Please enter valid response : y/n"
         play_again_input
       end
     end
 
-    
+    def prompt_for_player_name
+      puts "please enter your name"
+      get_player_details
+    end
+
+    def get_player_details
+      @player.name = gets.chomp
+      #@player.char = "x"
+    end
+
 
 
     def play
+      #binding.pry
+      prompt_for_player_name
       puts "#{@current_player.name} has randomly been selected as the first player"
         keep_playing = true
         while keep_playing
           show_board
-          ask_current_player_move
+          @current_player == @player ? ask_current_player_move : computer_move
           moves_convert = convert_move
           @board.set_cell(moves_convert[0],moves_convert[1], @current_player.char)
             if @board.game_done?
@@ -217,7 +241,6 @@ end
             end
         end
       end
-
   end 
 end
 
