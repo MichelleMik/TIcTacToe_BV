@@ -9,6 +9,7 @@ module TicTacToe
   end
 
   class Player
+
     attr_reader  :char
     attr_accessor :name
 
@@ -59,35 +60,83 @@ module TicTacToe
       @available_spaces = [1,2,3,4,5,6,7,8,9]
     end
     
- 
+    def grid_hash
+      moves =  {
+      1 => [0,0],
+      2 => [0,1],
+      3 => [0,2],
+      4 => [1,0],
+      5 => [1,1],
+      6 => [1,2],
+      7 => [2,0],
+      8 => [2,1],
+      9 => [2,2]
+      }
+    end
+
     def default
-      Array.new(3){ Array.new(3) { Cell.new}}
+      new_moves = grid_hash.keys.map{|move|Cell.new(move)}
+      newest = new_moves.each_slice(3).to_a
     end
 
          
-   
+    #refactored with enumerable
     def diagonal_wins?
-      i = 0
-      chars = []
-      while i < @length
-        chars << @grid[i][i].val
-        i+=1
-      end
-      diag_chars = chars.reject{|item| item == ' '}
-      diag_chars.size == 3 && diag_chars.uniq.size == 1
+      chars = Array.new(@length)
+      diag_chars = chars.each_with_index.map{|char, i| @grid[i][i].val}.reject{|item| item == ' '}
+      diag_chars.size == @length && diag_chars.uniq.size == 1
     end
-
+    #old version
+      #i = 0
+      #chars = []
+      # while i < @length
+      #   chars << @grid[i][i].val
+      #   i+=1
+      # end
+      # diag_chars = chars.reject{|item| item == ' '}
+     
+      #refactored with emumerable
     def anti_diagonal_wins?
+      anti_diag_chars = Array.new(@length).each_with_index.map{|char, i| @grid[i][(@length-1)-i].val}.reject{|item| item == ' '}
+      anti_diag_chars.size == @length && anti_diag_chars.uniq.size == 1 
+    end 
+      # binding.pry
+      # num == @length - 1
+      # anti_diag_chars = Array.new(@length).each_with_index.map{|char, i| @grid[i][(@length-1)-i]}
+      #   if anti_diag_chars.reject{|item| item.val == " "}.length == num
+      #     next_move = anti_diag_chars.reject{|item| item.val != " "}.first
+      #   end
+      #anti_diag_chars.size == @length && anti_diag_chars.uniq.size == 1  
+    
+      #end
+    #end
+
+    #old version
+    # i = 0
+      # chars = []
+      # while i < @length
+      #   chars << @grid[i][(@length-1)-i].val
+      #   i+=1
+      # end
+      # anti_diag_chars = chars.reject{|item| item == ' '}
+
+      #wotk in progress
+    def smart_computer_diag
+      n = @length - 1
       i = 0
       chars = []
       while i < @length
-        chars << @grid[i][(@length-1)-i].val
+        chars << @grid[i][(@length-1)-i]
         i+=1
       end
-      anti_diag_chars = chars.reject{|item| item == ' '}
-      anti_diag_chars.size == 3 && anti_diag_chars.uniq.size == 1  
-    end
-  
+      binding.pry
+      if chars.reject{|item| item.val == ' '} .length == n
+        pos = chars.find{|item| item.val == ' '}
+        return pos
+      else
+        false
+      end
+      end
 
     def row_wins?
       i = 0
@@ -143,31 +192,24 @@ module TicTacToe
     def computer_move
       puts "Computer's turn!"
       sleep 1.0
+      if @board.smart_computer_diag
+        @board.smart_computer_diag
+      else
       @board.available_spaces.sample
+      end
     end
 
 
     def get_current_players_move
       move = gets.chomp.to_i
     end
+    
 
     def convert_move
-
       @current_player == @player ? the_move = get_current_players_move : the_move = computer_move
-      moves =  {
-      1 => [0,0],
-      2 => [0,1],
-      3 => [0,2],
-      4 => [1,0],
-      5 => [1,1],
-      6 => [1,2],
-      7 => [2,0],
-      8 => [2,1],
-      9 => [2,2]
-      }
       if @board.available_spaces.include?(the_move)
-       @board.available_spaces -= [the_move]
-       return moves[the_move]
+        @board.available_spaces -= [the_move]
+        return @board.grid_hash[the_move]
       else
         puts"please choose an available space"
         convert_move
@@ -184,11 +226,11 @@ module TicTacToe
     end
 
     def show_board                    
-    puts "1   #{@board.grid[0][0].val} |2   #{@board.grid[0][1].val} |3   #{@board.grid[0][2].val}"
+    puts "   #{@board.grid[0][0].val} |   #{@board.grid[0][1].val} |  #{@board.grid[0][2].val}"
     puts "--------------------"
-    puts "4   #{@board.grid[1][0].val} |5   #{@board.grid[1][1].val} |6   #{@board.grid[1][2].val}"
-    puts "--------------------"
-    puts "7   #{@board.grid[2][0].val} |8   #{@board.grid[2][1].val} |9   #{@board.grid[2][2].val}"
+    puts "   #{@board.grid[1][0].val} |   #{@board.grid[1][1].val} |   #{@board.grid[1][2].val}"
+    puts "----------------"
+    puts "   #{@board.grid[2][0].val} |  #{@board.grid[2][1].val}  |   #{@board.grid[2][2].val}"
     end
 
     def play_again
@@ -238,7 +280,7 @@ module TicTacToe
       keep_playing = true
       while keep_playing
         play_sequence
-        if @board.game_done?
+         if @board.game_done? 
           game_over_sequence
           keep_playing = play_again
         else
