@@ -18,8 +18,6 @@ module TicTacToe
       @char = char
     end
 
- 
-
   end
 
   class GameBoard
@@ -44,12 +42,11 @@ module TicTacToe
 
 
     def winner?
-     # binding.pry
       diagonal_wins? || anti_diagonal_wins? || row_wins? || column_wins?
     end
 
      def tie?
-      @available_spaces.empty?
+      @available_spaces.size == 0
     end
 
 
@@ -70,7 +67,6 @@ module TicTacToe
          
    
     def diagonal_wins?
-      #binding.pry
       i = 0
       chars = []
       while i < @length
@@ -95,8 +91,8 @@ module TicTacToe
 
     def row_wins?
       i = 0
-      y = 0
       while i < @length
+        y = 0
         while y < @length
           break if (@grid[i][y].val == " " ||   (@grid[i][y].val != @grid[i][y+1].val))
           y+=1
@@ -107,14 +103,12 @@ module TicTacToe
       false
     end
     
-      
-
-
+    
 
     def column_wins?
       y = 0
-      i = 0
       while y < @length
+        i = 0
         while i < @length
          break if (@grid[i][y].val == " " ||  @grid[i][y].val != @grid[i +1][y].val)
           i+=1
@@ -124,6 +118,7 @@ module TicTacToe
       end
       false
     end
+
   end
 
   class Game
@@ -138,8 +133,7 @@ module TicTacToe
     end
 
     def next_player
-      #binding.pry
-      @current_player == @player ? @computer : @player
+      @current_player == @player ? @current_player = @computer : @current_player = @player
     end
 
     def ask_current_player_move
@@ -147,6 +141,8 @@ module TicTacToe
     end
 
     def computer_move
+      puts "Computer's turn!"
+      sleep 1.0
       @board.available_spaces.sample
     end
 
@@ -156,6 +152,7 @@ module TicTacToe
     end
 
     def convert_move
+
       @current_player == @player ? the_move = get_current_players_move : the_move = computer_move
       moves =  {
       1 => [0,0],
@@ -169,8 +166,8 @@ module TicTacToe
       9 => [2,2]
       }
       if @board.available_spaces.include?(the_move)
-         @board.available_spaces -= [the_move]
-         moves[the_move]
+       @board.available_spaces -= [the_move]
+       return moves[the_move]
       else
         puts"please choose an available space"
         convert_move
@@ -179,8 +176,11 @@ module TicTacToe
     
 
     def game_over
-      puts "#{@current_player.name} won" if (@board.winner? && @board.tie?) || @board.winner?
-      puts "Its a tie!" if @board.tie?
+      if (@board.winner? && @board.tie?) || @board.winner?
+        puts "#{@current_player.name} won"
+      else
+       puts "Its a tie!"
+      end 
     end
 
     def show_board                    
@@ -215,32 +215,38 @@ module TicTacToe
 
     def get_player_details
       @player.name = gets.chomp
-      #@player.char = "x"
+    end
+
+    def play_sequence
+      show_board
+      @current_player == @player ? ask_current_player_move : computer_move
+      moves_convert = convert_move
+      @board.set_cell(moves_convert[0],moves_convert[1], @current_player.char)
+    end
+
+    def game_over_sequence
+      game_over
+      show_board
+      sleep 1.0    
+      @board.reset_board 
     end
 
 
-
     def play
-      #binding.pry
       prompt_for_player_name
       puts "#{@current_player.name} has randomly been selected as the first player"
-        keep_playing = true
-        while keep_playing
-          show_board
-          @current_player == @player ? ask_current_player_move : computer_move
-          moves_convert = convert_move
-          @board.set_cell(moves_convert[0],moves_convert[1], @current_player.char)
-            if @board.game_done?
-              game_over
-              show_board
-              sleep 0.5
-              keep_playing = play_again
-              @board.reset_board
-            else
-              next_player
-            end
+      keep_playing = true
+      while keep_playing
+        play_sequence
+        if @board.game_done?
+          game_over_sequence
+          keep_playing = play_again
+        else
+          sleep 1.0
+          next_player
         end
       end
+    end
   end 
 end
 
