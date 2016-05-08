@@ -1,11 +1,13 @@
 require 'pry'
 module TicTacToe
   class Cell
-    attr_accessor :val
+    attr_accessor :val, :coordinates
 
     def initialize(value = " ")
       @val = value
+      @coordinates = []
     end
+
   end
 
   class Player
@@ -24,11 +26,12 @@ module TicTacToe
   class GameBoard
 
   attr_reader :grid, :length 
-  attr_accessor :available_spaces
+  attr_accessor :available_spaces, :cells
 
     def initialize
       reset_board
       @length = @grid.length
+      @cells = []
     
     end
 
@@ -37,8 +40,13 @@ module TicTacToe
     end
 
     def set_cell(x,y, char)
-      get_cell_coordinates(x,y).val = char
+      cell = get_cell_coordinates(x,y)
+      cell.coordinates.push(x,y)
+      @cells << cell
+      cell.val = char
     end
+    
+
 
 
 
@@ -46,7 +54,7 @@ module TicTacToe
       diagonal_wins? || anti_diagonal_wins? || row_wins? || column_wins?
     end
 
-     def tie?
+    def tie?
       @available_spaces.size == 0
     end
 
@@ -57,7 +65,7 @@ module TicTacToe
 
     def reset_board
       @grid = default
-      @available_spaces = [1,2,3,4,5,6,7,8,9]
+      @available_spaces = grid_hash.keys
     end
     
     def grid_hash
@@ -79,71 +87,36 @@ module TicTacToe
       newest = new_moves.each_slice(3).to_a
     end
 
-         
-    #refactored with enumerable
-    def diagonal_wins?
-      chars = Array.new(@length)
-      diag_chars = chars.each_with_index.map{|char, i| @grid[i][i].val}.reject{|item| item == ' '}
-      diag_chars.size == @length && diag_chars.uniq.size == 1
+    def diagonal_wins
+      diag_chars = Array.new(@length).each_with_index.map do |char, i| 
+        @grid[i][i].val
+      end.reject{|item| item == /[0-9]/}
+      diag_chars
     end
-    #old version
-      #i = 0
-      #chars = []
-      # while i < @length
-      #   chars << @grid[i][i].val
-      #   i+=1
-      # end
-      # diag_chars = chars.reject{|item| item == ' '}
-     
-      #refactored with emumerable
-    def anti_diagonal_wins?
-      anti_diag_chars = Array.new(@length).each_with_index.map{|char, i| @grid[i][(@length-1)-i].val}.reject{|item| item == ' '}
-      anti_diag_chars.size == @length && anti_diag_chars.uniq.size == 1 
-    end 
-      # binding.pry
-      # num == @length - 1
-      # anti_diag_chars = Array.new(@length).each_with_index.map{|char, i| @grid[i][(@length-1)-i]}
-      #   if anti_diag_chars.reject{|item| item.val == " "}.length == num
-      #     next_move = anti_diag_chars.reject{|item| item.val != " "}.first
-      #   end
-      #anti_diag_chars.size == @length && anti_diag_chars.uniq.size == 1  
+
+         
+    def diagonal_wins?
+      diagonal_wins.size == @length && diagonal_wins.uniq.size == 1
+    end
+
+    def anti_diagonal_wins
+      anti_diag_chars = Array.new(@length).each_with_index.map do |char, i|
+        @grid[i][(@length-1)-i].val
+      end.reject{|item| item == /[0-9]/}
+      anti_diag_chars
+    end
     
-      #end
-    #end
+    def anti_diagonal_wins?
+      anti_diagonal_wins.size == @length && anti_diagonal_wins.uniq.size == 1 
+    end 
 
-    #old version
-    # i = 0
-      # chars = []
-      # while i < @length
-      #   chars << @grid[i][(@length-1)-i].val
-      #   i+=1
-      # end
-      # anti_diag_chars = chars.reject{|item| item == ' '}
-
-      #wotk in progress
-    def smart_computer_diag
-      n = @length - 1
-      i = 0
-      chars = []
-      while i < @length
-        chars << @grid[i][(@length-1)-i]
-        i+=1
-      end
-      binding.pry
-      if chars.reject{|item| item.val == ' '} .length == n
-        pos = chars.find{|item| item.val == ' '}
-        return pos
-      else
-        false
-      end
-      end
 
     def row_wins?
-      i = 0
-      while i < @length
+       i = 0
+        while i < @length
         y = 0
         while y < @length
-          break if (@grid[i][y].val == " " ||   (@grid[i][y].val != @grid[i][y+1].val))
+          break if (@grid[i][y].val == /[0-9]/   ||   (@grid[i][y].val != @grid[i][y+1].val))
           y+=1
           return true if (y == @length - 1)
         end
@@ -151,29 +124,27 @@ module TicTacToe
       end
       false
     end
-    
-    
+
 
     def column_wins?
       y = 0
       while y < @length
-        i = 0
+       i = 0
         while i < @length
-         break if (@grid[i][y].val == " " ||  @grid[i][y].val != @grid[i +1][y].val)
+          break if (@grid[i][y].val == /[0-9]/   ||  @grid[i][y].val != @grid[i +1][y].val)
           i+=1
           return true if(i == @length - 1)
         end
-         y+=1
+        y+=1
       end
-      false
+     false
     end
-
   end
 
   class Game
     attr_accessor :player,:computer, :players, :board, :current_player, :next_player
 
-    def initialize(players, board = GameBoard.new)
+    def initialize(board = GameBoard.new)
       @computer = Player.new("Computer", "o")
       @player = Player.new
       @players = [@player, @computer]
@@ -192,24 +163,21 @@ module TicTacToe
     def computer_move
       puts "Computer's turn!"
       sleep 1.0
-      if @board.smart_computer_diag
-        @board.smart_computer_diag
-      else
-      @board.available_spaces.sample
-      end
+      move = @board.available_spaces.sample
+      convert_move(move)
     end
 
 
     def get_current_players_move
       move = gets.chomp.to_i
+      convert_move(move)
     end
     
 
-    def convert_move
-      @current_player == @player ? the_move = get_current_players_move : the_move = computer_move
-      if @board.available_spaces.include?(the_move)
-        @board.available_spaces -= [the_move]
-        return @board.grid_hash[the_move]
+    def convert_move(move)
+      if @board.available_spaces.include?(move)
+        @board.available_spaces -= [move]
+        return @board.grid_hash[move]
       else
         puts"please choose an available space"
         convert_move
@@ -261,9 +229,9 @@ module TicTacToe
 
     def play_sequence
       show_board
-      @current_player == @player ? ask_current_player_move : computer_move
-      moves_convert = convert_move
-      @board.set_cell(moves_convert[0],moves_convert[1], @current_player.char)
+      @current_player == @player ? move = get_current_players_move : move = computer_move
+      #moves_convert = convert_move
+      @board.set_cell(move[0],move[1], @current_player.char)
     end
 
     def game_over_sequence

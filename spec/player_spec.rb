@@ -2,14 +2,20 @@ require "spec_helper"
 module TicTacToe
   describe Player do
    
-    it "can be initialized with valid input: name and character" do
-      input = {name: "Bob", char: 'x'}
-        expect{Player.new(input)}.to_not raise_error
+    it "is initialized with default name of 'human'" do
+        frank = Player.new
+        expect frank.name.to eq("human")
     end
-    
-    it "cannot be initialized without a complete input hash" do
-      input = {}
-      expect{Player.new(input)}.to raise_error
+
+    it "is initialized with a default character of 'x'" do
+       annie = Player.new
+       expect annie.char.to eq('x')
+    end
+
+    it "can have its name changed upon user input" do
+      bobbo = Player.new
+      bobbo.name = "Bob"
+      expect bobbo.name.to eq("Bob")
     end
 
   end
