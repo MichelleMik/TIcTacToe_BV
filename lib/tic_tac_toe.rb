@@ -12,27 +12,26 @@ module TicTacToe
 
   class Player
 
-    attr_reader  :char
+    attr_reader  :char 
     attr_accessor :name
 
     def initialize(name = "human", char = 'x')
-     
       @name = name
       @char = char
     end
 
   end
 
+
+
   class GameBoard
 
   attr_reader :grid, :length 
-  attr_accessor :available_spaces, :cells
+  attr_accessor :available_spaces
 
     def initialize
       reset_board
       @length = @grid.length
-      @cells = []
-    
     end
 
     def get_cell_coordinates(x,y)
@@ -42,7 +41,6 @@ module TicTacToe
     def set_cell(x,y, char)
       cell = get_cell_coordinates(x,y)
       cell.coordinates.push(x,y)
-      @cells << cell
       cell.val = char
     end
     
@@ -145,10 +143,15 @@ module TicTacToe
     attr_accessor :player,:computer, :players, :board, :current_player, :next_player
 
     def initialize(board = GameBoard.new)
-      @computer = Player.new("Computer", "o")
       @player = Player.new
+      @computer = Player.new("Computer", "o")
       @players = [@player, @computer]
       @board = board
+      random_first_player
+      #@current_player = @players.sample
+    end
+
+    def random_first_player
       @current_player = @players.sample
     end
 
@@ -156,32 +159,42 @@ module TicTacToe
       @current_player == @player ? @current_player = @computer : @current_player = @player
     end
 
-    def ask_current_player_move
-      puts "#{@current_player.name}, choose a number from the grid to make your turn"
-    end
-
     def computer_move
-      puts "Computer's turn!"
       sleep 1.0
       move = @board.available_spaces.sample
       convert_move(move)
-    end
+     end
 
+    def ask_current_players_move
+      puts "#{@current_player.name}, choose a number from the grid to make your turn" 
+      get_current_players_move
+    end 
 
     def get_current_players_move
       move = gets.chomp.to_i
-      convert_move(move)
+      if @board.available_spaces.include?(move)
+          convert_move(move)
+      else
+        "Try again, this space is taken!"
+        get_current_players_move
+      end
     end
-    
+
+     def prompt_for_player_name
+      puts "please enter your name"
+      get_player_details
+    end
+
+    def get_player_details
+      name = gets.chomp
+    end
+
 
     def convert_move(move)
-      if @board.available_spaces.include?(move)
+      #if @board.available_spaces.include?(move)
         @board.available_spaces -= [move]
         return @board.grid_hash[move]
-      else
-        puts"please choose an available space"
-        convert_move
-      end
+      #end
     end
     
 
@@ -194,11 +207,11 @@ module TicTacToe
     end
 
     def show_board                    
-    puts "   #{@board.grid[0][0].val} |   #{@board.grid[0][1].val} |  #{@board.grid[0][2].val}"
+    puts "   #{@board.grid[0][0].val} |  #{@board.grid[0][1].val} |   #{@board.grid[0][2].val}"
     puts "--------------------"
-    puts "   #{@board.grid[1][0].val} |   #{@board.grid[1][1].val} |   #{@board.grid[1][2].val}"
+    puts "   #{@board.grid[1][0].val} |  #{@board.grid[1][1].val} |   #{@board.grid[1][2].val}"
     puts "----------------"
-    puts "   #{@board.grid[2][0].val} |  #{@board.grid[2][1].val}  |   #{@board.grid[2][2].val}"
+    puts "   #{@board.grid[2][0].val} |  #{@board.grid[2][1].val} |   #{@board.grid[2][2].val}"
     end
 
     def play_again
@@ -209,6 +222,7 @@ module TicTacToe
     def play_again_input
       input = gets.chomp.downcase
       if input == 'y'
+        random_first_player
         true
       elsif input == 'n'
         false
@@ -218,19 +232,11 @@ module TicTacToe
       end
     end
 
-    def prompt_for_player_name
-      puts "please enter your name"
-      get_player_details
-    end
-
-    def get_player_details
-      @player.name = gets.chomp
-    end
+   
 
     def play_sequence
       show_board
-      @current_player == @player ? move = get_current_players_move : move = computer_move
-      #moves_convert = convert_move
+      @current_player == @player ? move = ask_current_players_move : move = computer_move
       @board.set_cell(move[0],move[1], @current_player.char)
     end
 
@@ -241,9 +247,18 @@ module TicTacToe
       @board.reset_board 
     end
 
+    def setup_game
+      menu
+      @player.name = prompt_for_player_name
+    end
 
-    def play
-      prompt_for_player_name
+    def menu
+      puts "Welcome to Tic-Tac-Toe"
+    end
+
+
+    def play 
+      setup_game
       puts "#{@current_player.name} has randomly been selected as the first player"
       keep_playing = true
       while keep_playing

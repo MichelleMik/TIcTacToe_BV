@@ -25,7 +25,8 @@ module TicTacToe
     @game = Game.new
     available = [1,3,5,7]
     @game.board.available_spaces = available
-    expect(available).to include(@game.board.grid_hash.key(@game.computer_move))
+    computer_move = @game.computer_move
+    expect(available).to include(@game.board.grid_hash.key(computer_move))
     end
   end
 
