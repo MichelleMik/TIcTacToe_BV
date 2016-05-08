@@ -23,7 +23,6 @@ module TicTacToe
   end
 
 
-
   class GameBoard
 
   attr_reader :grid, :length 
@@ -44,8 +43,6 @@ module TicTacToe
       cell.val = char
     end
     
-
-
 
 
     def winner?
@@ -148,7 +145,6 @@ module TicTacToe
       @players = [@player, @computer]
       @board = board
       random_first_player
-      #@current_player = @players.sample
     end
 
     def random_first_player
@@ -191,10 +187,8 @@ module TicTacToe
 
 
     def convert_move(move)
-      #if @board.available_spaces.include?(move)
         @board.available_spaces -= [move]
         return @board.grid_hash[move]
-      #end
     end
     
 
