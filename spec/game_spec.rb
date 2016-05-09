@@ -23,6 +23,7 @@ module TicTacToe
   describe "#computer_move" do
     it "should choose to block row wins" do
     @game = Game.new
+    #binding.pry
     @game.board.grid[0][0].val = "x"
     @game.board.grid[0][1].val = "x"
     computer_move = @game.computer_move

@@ -60,7 +60,23 @@ module TicTacToe
       expect(@board.diagonal_wins?).to eq(false)
     end
   end
+    describe "#anti_diagonal_wins?" do
+    it "should detect a win on the anti-diagonal and return true when this occurs" do
+      @board = GameBoard.new
+      @board.set_cell(0,2, 'x')
+      @board.set_cell(1,1,'x')
+      @board.set_cell(2,0,'x')
+      expect(@board.anti_diagonal_wins?).to eq(true)
+    end
 
+    it "should not return true if there is no win on the anti-diagonal" do
+      @board = GameBoard.new
+      @board.set_cell(0,2, 'x')
+      @board.set_cell(1,1,'x')
+      @board.set_cell(2,0,'o') 
+      expect(@board.anti_diagonal_wins?).to eq(false)
+    end
+  end
   describe "#column_or_row_wins?" do
     it "should detect a row win and return true when it occurs" do
       @board = GameBoard.new
@@ -79,7 +95,7 @@ module TicTacToe
     end
   end
   
-  describe "#column_wins?" do
+  describe "#column_or_row_wins?" do
     it "should detect a column win and return true when it occurs" do
       @board = GameBoard.new
       @board.set_cell(0,1, 'x')

@@ -1,11 +1,11 @@
 require 'pry'
 module TicTacToe
   class Cell
-    attr_accessor :val, :coordinates
+    attr_accessor :val
 
     def initialize(value = " ")
       @val = value
-      @coordinates = []
+     
     end
 
   end
@@ -39,7 +39,6 @@ module TicTacToe
 
     def set_cell(x,y, char)
       cell = get_cell_coordinates(x,y)
-      cell.coordinates.push(x,y)
       cell.val = char
     end
     
@@ -111,14 +110,16 @@ module TicTacToe
       anti_diagonal.size == @length && anti_diagonal.uniq.size == 1 
     end
 
-     def block_row_wins
-       i = 0
+  
+
+    def block_row_wins
+      i = 0
        rows = []
-        while i < @length
-        row = Hash.new{|h,k| h[k] = []}
-        y = 0
+      while i < @length
+      row = []
+      y = 0
         while y < @length
-           row[@grid[i][y].val].push(@grid[i][y].coordinates)
+          row.push(@grid[i][y].val)
           y+=1
         end
         rows.push(row)
@@ -126,28 +127,26 @@ module TicTacToe
       end
       rows
     end
-      
 
     def block_column_wins
       y = 0
-       columns = []
-        while y < @length
-        column = Hash.new{|h,k| h[k] = []}
-        i = 0
+      columns = []
+      while y < @length
+      column = []
+      i = 0
         while i < @length
-           column[@grid[i][y].val].push(@grid[i][y].coordinates)
-          i+=1
+           column.push(@grid[i][y].val)
+           i+=1
         end
         columns.push(column)
-        y+=1
+      y+=1
       end
       columns
     end
 
-
     def column_or_row_wins?(type)
       method = self.send("block_#{type}_wins")
-      wins = method.find{|hsh| hsh.keys.size == 1}
+      wins = method.find{|item| item.uniq.size == 1}
       if wins
         non_int_wins = wins.reject{|item|item.is_a? Integer}
         non_int_wins ? true : false
@@ -155,7 +154,6 @@ module TicTacToe
        false
       end
     end
-
 
 
   end
@@ -179,45 +177,42 @@ module TicTacToe
       @current_player == @player ? @current_player = @computer : @current_player = @player
     end
 
-    def computer_about_to_lose_row
-      keys = @board.block_row_wins.find{|hsh|hsh.keys.size == 2 && hsh.keys.any?{|item|item.is_a? Integer}}
+    def computer_about_to_lose_row_or_column(type)
+      method = self.board.send("block_#{type}_wins")
+      keys = method.find{|item|item.uniq.size == 2 && item.any?{|item|item.is_a? Integer}}
     end
 
-    def computer_about_to_lose_column
-      keys = @board.block_column_wins.find{|hsh|hsh.keys.size == 2 && hsh.keys.any?{|item|item.is_a? Integer}}
+
+    def computer_about_to_lose_a_diag(type)
+      method = self.board.send("#{type}_wins")
+      method.uniq.size == 2  &&  method.find{|item| item.is_a? Integer}  
     end
 
-    def computer_about_to_lose_anti_diag
-      @board.anti_diagonal_wins.uniq.size == 2  &&  @board.anti_diagonal_wins.find{|item| item.is_a? Integer}  
+ 
+
+    def computer_move_to_block_row_or_column_win(type)
+        method = computer_about_to_lose_row_or_column(type)
+        move = method.find{|char| char.is_a? Integer}
     end
 
-    def computer_about_to_lose_diag
-      @board.diagonal_wins.uniq.size == 2  &&  @board.diagonal_wins.find{|item| item.is_a? Integer}  
-    end
-   
-    def computer_move_to_block_row_win
-        move = computer_about_to_lose_row.keys.find{|key| key.is_a? Integer}
-    end
-
-     def computer_move_to_block_column_win
-        move = computer_about_to_lose_column.keys.find{|key| key.is_a? Integer }
-    end
+  
 
     def computer_move
-      sleep 1.0
-      if computer_about_to_lose_row
-        move = computer_move_to_block_row_win
-      elsif computer_about_to_lose_column
-        move = computer_move_to_block_column_win
-      elsif computer_about_to_lose_diag
-        move = computer_about_to_lose_diag
-      elsif computer_about_to_lose_anti_diag
-        move = computer_about_to_lose_anti_diag
+      puts "Computer's turn"
+      sleep 0.5
+      if computer_about_to_lose_row_or_column("row")
+        move = computer_move_to_block_row_or_column_win("row")
+      elsif computer_about_to_lose_row_or_column("column")
+        move = computer_move_to_block_row_or_column_win("column")
+      elsif computer_about_to_lose_a_diag("diagonal")
+        move = computer_about_to_lose_a_diag("diagonal")
+      elsif computer_about_to_lose_a_diag("anti_diagonal")
+        move = computer_about_to_lose_a_diag("anti_diagonal")
       else
        move = @board.available_spaces.sample
       end
       convert_move(move)
-     end
+    end
 
     def ask_current_players_move
       puts "#{@current_player.name}, choose a number from the grid to make your turn" 
@@ -245,8 +240,8 @@ module TicTacToe
 
 
     def convert_move(move)
-        @board.available_spaces -= [move]
-        return @board.grid_hash[move]
+      @board.available_spaces -= [move]
+      return @board.grid_hash[move]
     end
     
 
