@@ -46,7 +46,7 @@ module TicTacToe
 
 
     def winner?
-      diagonal_wins? || anti_diagonal_wins? || row_wins? || column_wins?
+      diagonal_wins? || anti_diagonal_wins? || column_or_row_wins?("row") || column_or_row_wins?("column")
     end
 
     def tie?
@@ -85,55 +85,79 @@ module TicTacToe
     def diagonal_wins
       diag_chars = Array.new(@length).each_with_index.map do |char, i| 
         @grid[i][i].val
-      end.reject{|item| item == /[0-9]/}
+      end
       diag_chars
     end
 
          
     def diagonal_wins?
-      diagonal_wins.size == @length && diagonal_wins.uniq.size == 1
+      if diagonal_wins
+        diagonal = diagonal_wins.reject{|item| item.is_a? Integer} 
+      end
+      diagonal.size == @length && diagonal.uniq.size == 1
     end
 
     def anti_diagonal_wins
       anti_diag_chars = Array.new(@length).each_with_index.map do |char, i|
         @grid[i][(@length-1)-i].val
-      end.reject{|item| item == /[0-9]/}
+      end
       anti_diag_chars
     end
     
     def anti_diagonal_wins?
-      anti_diagonal_wins.size == @length && anti_diagonal_wins.uniq.size == 1 
-    end 
+      if anti_diagonal_wins
+        anti_diagonal = anti_diagonal_wins.reject{|item| item.is_a? Integer} 
+      end
+      anti_diagonal.size == @length && anti_diagonal.uniq.size == 1 
+    end
 
-
-    def row_wins?
+     def block_row_wins
        i = 0
+       rows = []
         while i < @length
+        row = Hash.new{|h,k| h[k] = []}
         y = 0
         while y < @length
-          break if (@grid[i][y].val == /[0-9]/   ||   (@grid[i][y].val != @grid[i][y+1].val))
+           row[@grid[i][y].val].push(@grid[i][y].coordinates)
           y+=1
-          return true if (y == @length - 1)
         end
+        rows.push(row)
         i+=1
       end
-      false
+      rows
     end
+      
 
-
-    def column_wins?
+    def block_column_wins
       y = 0
-      while y < @length
-       i = 0
+       columns = []
+        while y < @length
+        column = Hash.new{|h,k| h[k] = []}
+        i = 0
         while i < @length
-          break if (@grid[i][y].val == /[0-9]/   ||  @grid[i][y].val != @grid[i +1][y].val)
+           column[@grid[i][y].val].push(@grid[i][y].coordinates)
           i+=1
-          return true if(i == @length - 1)
         end
+        columns.push(column)
         y+=1
       end
-     false
+      columns
     end
+
+
+    def column_or_row_wins?(type)
+      method = self.send("block_#{type}_wins")
+      wins = method.find{|hsh| hsh.keys.size == 1}
+      if wins
+        non_int_wins = wins.reject{|item|item.is_a? Integer}
+        non_int_wins ? true : false
+      else
+       false
+      end
+    end
+
+
+
   end
 
   class Game
@@ -155,9 +179,43 @@ module TicTacToe
       @current_player == @player ? @current_player = @computer : @current_player = @player
     end
 
+    def computer_about_to_lose_row
+      keys = @board.block_row_wins.find{|hsh|hsh.keys.size == 2 && hsh.keys.any?{|item|item.is_a? Integer}}
+    end
+
+    def computer_about_to_lose_column
+      keys = @board.block_column_wins.find{|hsh|hsh.keys.size == 2 && hsh.keys.any?{|item|item.is_a? Integer}}
+    end
+
+    def computer_about_to_lose_anti_diag
+      @board.anti_diagonal_wins.uniq.size == 2  &&  @board.anti_diagonal_wins.find{|item| item.is_a? Integer}  
+    end
+
+    def computer_about_to_lose_diag
+      @board.diagonal_wins.uniq.size == 2  &&  @board.diagonal_wins.find{|item| item.is_a? Integer}  
+    end
+   
+    def computer_move_to_block_row_win
+        move = computer_about_to_lose_row.keys.find{|key| key.is_a? Integer}
+    end
+
+     def computer_move_to_block_column_win
+        move = computer_about_to_lose_column.keys.find{|key| key.is_a? Integer }
+    end
+
     def computer_move
       sleep 1.0
-      move = @board.available_spaces.sample
+      if computer_about_to_lose_row
+        move = computer_move_to_block_row_win
+      elsif computer_about_to_lose_column
+        move = computer_move_to_block_column_win
+      elsif computer_about_to_lose_diag
+        move = computer_about_to_lose_diag
+      elsif computer_about_to_lose_anti_diag
+        move = computer_about_to_lose_anti_diag
+      else
+       move = @board.available_spaces.sample
+      end
       convert_move(move)
      end
 

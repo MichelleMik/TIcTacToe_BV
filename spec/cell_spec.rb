@@ -6,13 +6,15 @@ module TicTacToe
       expect(cell.val).to eq(" ")
     end
 
-    it "can be initialized with a value of 'x' " do
-      cell = Cell.new('x')
+    it "can be updated to include value of 'x' " do
+      cell = Cell.new
+      cell.val = 'x'
       expect(cell.val).to eq('x')
     end
 
-    it "can be initialized with a value of 'o'" do
-      cell = Cell.new('o')
+    it "can be updated to include the value of 'o'" do
+      cell = Cell.new
+      cell.val = 'o'
       expect(cell.val).to eq('o')
     end
 

@@ -21,12 +21,33 @@ module TicTacToe
   end
 
   describe "#computer_move" do
-    it "should choose from available spaces only" do
+    it "should choose to block row wins" do
     @game = Game.new
-    available = [1,3,5,7]
-    @game.board.available_spaces = available
+    @game.board.grid[0][0].val = "x"
+    @game.board.grid[0][1].val = "x"
     computer_move = @game.computer_move
-    expect(available).to include(@game.board.grid_hash.key(computer_move))
+    expect(computer_move).to eq([0,2])
+    end
+    it "should choose to block colum wins" do
+      @game = Game.new
+      @game.board.grid[0][0].val = "x"
+      @game.board.grid[1][0].val = "x"
+      computer_move = @game.computer_move
+      expect(computer_move).to eq([2,0])
+    end
+    it "should choose to block diagonal wins" do
+      @game = Game.new
+      @game.board.grid[0][0].val = "x"
+      @game.board.grid[1][1].val = "x"
+      computer_move = @game.computer_move
+      expect(computer_move).to eq([2,2])
+    end
+    it "should choose to block anti-diagonal wins" do
+      @game = Game.new
+      @game.board.grid[2][0].val = "x"
+      @game.board.grid[1][1].val = "x"
+      computer_move = @game.computer_move
+      expect(computer_move).to eq([0,2])
     end
   end
 

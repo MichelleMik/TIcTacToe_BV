@@ -61,13 +61,13 @@ module TicTacToe
     end
   end
 
-  describe "#row_wins?" do
+  describe "#column_or_row_wins?" do
     it "should detect a row win and return true when it occurs" do
       @board = GameBoard.new
       @board.set_cell(0,0, 'x')
       @board.set_cell(0,1,'x')
       @board.set_cell(0,2,'x') 
-      expect(@board.row_wins?).to eq(true)
+      expect(@board.column_or_row_wins?("row")).to eq(true)
     end
 
     it "should return false if no row wins are detected" do
@@ -75,7 +75,7 @@ module TicTacToe
       @board.set_cell(0,0, 'x')
       @board.set_cell(1,1,'o')
       @board.set_cell(2,2,'9') 
-      expect(@board.row_wins?).to eq(false)
+      expect(@board.column_or_row_wins?("row")).to eq(false)
     end
   end
   
@@ -85,7 +85,7 @@ module TicTacToe
       @board.set_cell(0,1, 'x')
       @board.set_cell(1,1,'x')
       @board.set_cell(2,1,'x') 
-      expect(@board.column_wins?).to eq(true)
+      expect(@board.column_or_row_wins?("column")).to eq(true)
     end
 
     it "should return false if no column wins are detected" do
@@ -93,7 +93,7 @@ module TicTacToe
       @board.set_cell(0,0,'o')
       @board.set_cell(1,1,'o')
       @board.set_cell(2,2,'x') 
-      expect(@board.column_wins?).to eq(false)
+      expect(@board.column_or_row_wins?("column")).to eq(false)
     end
   end
 
