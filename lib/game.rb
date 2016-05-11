@@ -24,7 +24,8 @@ class Game
 
 
   def send_computer_move_to_convert
-    convert_move(@current_player.computer_move)
+    move = @current_player.computer_move
+    convert_move(move)
   end
 
   def ask_current_players_move

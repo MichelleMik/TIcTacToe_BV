@@ -1,10 +1,13 @@
 require_relative 'player.rb'
+
 class Human < Player
+
   def initialize(board)
     super(board)
     @name = "human"
     @char = 'x'
   end
+  
   def get_player_details
     name = gets.chomp
   end
