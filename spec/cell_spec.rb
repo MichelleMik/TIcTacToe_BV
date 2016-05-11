@@ -1,5 +1,5 @@
 require "spec_helper"
-module TicTacToe
+
   describe Cell  do
     it "is initialized with ' ' by default" do
       cell = Cell.new
@@ -19,4 +19,3 @@ module TicTacToe
     end
 
   end
-end

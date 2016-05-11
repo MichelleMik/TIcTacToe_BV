@@ -1,5 +1,5 @@
 require "spec_helper"
-module TicTacToe
+
   describe Game  do
     it "should be initialized with 2 players" do
       @game = Game.new
@@ -26,28 +26,31 @@ module TicTacToe
     #binding.pry
     @game.board.grid[0][0].val = "x"
     @game.board.grid[0][1].val = "x"
-    computer_move = @game.computer_move
+   # computer_move = send_computer_move_to_convert
+    computer_move = @game.board.grid_hash[@game.computer.computer_move]
     expect(computer_move).to eq([0,2])
     end
     it "should choose to block colum wins" do
       @game = Game.new
       @game.board.grid[0][0].val = "x"
       @game.board.grid[1][0].val = "x"
-      computer_move = @game.computer_move
+      computer_move = @game.board.grid_hash[@game.computer.computer_move]
+
       expect(computer_move).to eq([2,0])
     end
     it "should choose to block diagonal wins" do
       @game = Game.new
       @game.board.grid[0][0].val = "x"
       @game.board.grid[1][1].val = "x"
-      computer_move = @game.computer_move
+      computer_move = @game.board.grid_hash[@game.computer.computer_move]
       expect(computer_move).to eq([2,2])
     end
     it "should choose to block anti-diagonal wins" do
       @game = Game.new
       @game.board.grid[2][0].val = "x"
       @game.board.grid[1][1].val = "x"
-      computer_move = @game.computer_move
+      computer_move = @game.board.grid_hash[@game.computer.computer_move]
+
       expect(computer_move).to eq([0,2])
     end
   end
@@ -61,6 +64,6 @@ module TicTacToe
     end
   end
   
-end 
+
 
 

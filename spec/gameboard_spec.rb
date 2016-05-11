@@ -1,5 +1,4 @@
 require "spec_helper"
-module TicTacToe
   describe GameBoard  do
     it "should have three rows" do
     gameboard = GameBoard.new
@@ -113,4 +112,3 @@ module TicTacToe
     end
   end
 
-end
